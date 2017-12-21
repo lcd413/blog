@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Title</title>
+    <script src="/static/dist/js/jquery-3.1.1.js"></script>
+    <script src="/static/dist/js/bootstrap.js"></script>
+
+    <link rel="stylesheet" href="/static/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/homesite.css">
+    <link rel="stylesheet" href="/static/css/article_detail.css">
+    <link rel="stylesheet" href="/static/home_style/{{ current_user.blog.theme }}">
+    {% load Myfilters %}
+</head>
+<body>
+<div class="container">
+    <div class="row ">
+        <div class="col-md-4"><p class="nickname">{{ username }}的个人博客</p></div>
+        <div class="col-md-2 action pull-right">
+            <a href="/">首页</a>
+            <a href="/">随笔</a>
+            <a href="/">文章</a>
+            <a href="/blog/backend/">管理</a>
+        </div>
+   </div>
+    <div class="row">
+        <div class="article col-md-2 col-md-offset-1">
+            <div class="panel panel-primary">
+                <div class="panel-heading">个人信息</div>
+                <div class="panel-body">
+                    <p><img src="{{ current_user.avatar.url }}" alt="" width="60" height="60"></p>
+                    <p>昵称：{{ current_user.nickname }}</p>
+                    <p>园龄: {{ current_user.create_time|yuanling}}</p>
+                    <p>关注：</p>
+                    <p class="glyphicon glyphicon-plus">关注：</p>
+                </div>
+            </div>
+            <div class="panel panel-success">
+                <div class="panel-heading">分类归档</div>
+                <div class="panel-body">
+                    {% for category in category_list %}
+                        <p>
+                            <a href="/blog/{{ current_user.username }}/category/{{ category.0 }} ">{{ category.0 }}({{ category.1 }})</a>
+                        </p>
+                    {% endfor %}
+
+
+                </div>
+            </div>
+            <div class="panel panel-warning">
+                <div class="panel-heading">标签</div>
+                <div class="panel-body">
+                    {% for tag in tag_list %}
+                        <p><a href="/blog/{{ current_user.username }}/tag/{{ tag.0 }}">{{ tag.0 }}({{ tag.1 }})</a></p>
+                    {% endfor %}
+
+
+                </div>
+            </div>
+            <div class="panel panel-danger">
+                <div class="panel-heading">日期</div>
+                <div class="panel-body">
+                    {% for date in date_list %}
+                        <p><a href="/blog/{{ current_user.username }}/date/{{ date.0 }}">{{ date.0 }}({{ date.1 }})</a>
+                        </p>
+                    {% endfor %}
+
+
+                </div>
+            </div>
+
+        </div>
+        <div class="article_list col-md-8">
+            {% block content %}
+                {% for article in article_list %}
+                    <div class="row">
+                        <div class="article_title"><h4><a
+                                href="/blog/{{ current_user.username }}/articles/{{ article.nid }}">{{ article.title }}</a>
+                        </h4></div>
+                    </div>
+                    <div class="article_desc">
+                        <p>{{ article.desc }}</p>
+                    </div>
+                    <div class="info">
+                        发表与 <span>{{ article.create_time|date:"Y-m-d" }}</span>&nbsp;
+                        <span>评论({{ article.comment_count }})</span>&nbsp;
+                        <span>点赞({{ article.up_count }})</span>&nbsp;
+                        <span>阅读({{ article.read_count }})</span>
+
+                    </div>
+
+                {% endfor %}
+
+            {% endblock %}
+
+
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+</html>

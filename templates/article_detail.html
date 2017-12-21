@@ -1,0 +1,194 @@
+{% extends "homeSite.html" %}
+{% block content %}
+    <div class="row">
+        <h3 class="article_text">{{ article_obj.title }}</h3>
+        <div class="article_con">{{ article_obj.articledetail.content|safe }}</div>
+    </div>
+    <div class="updown row">
+        <div class="buryit pull-right">
+            <span class="burynum" id="bury_count"></span>
+        </div>
+        <div class="diggit pull-right">
+            <span class="diggnum" id="digg_count">{{ article_obj.up_count }}</span>
+        </div>
+    </div>
+    <span class="diggnum_error pull-right"></span>
+    <div class="had_comment_region">
+        <h5>已发表评论(评论树):</h5>
+        <div class="comment_tree_list"></div>
+        <h5>已发表评论(评论楼)：</h5>
+        <div class="comment_list">
+            {% for comment in comment_list %}
+
+                <div class="feedbackItem">
+                    <div class="row">
+                        <div class="col-md-6">
+
+                            <img src="{{ comment.user.avatar.url }}" alt="" width="30" height="30">{# 当前评论人的头像 #}
+                            <a href="/blog/{{ comment.user.username }}">{{ comment.user.username }}</a>{# 当前评论的人 #}
+                            发表于 {{ comment.create_time|date:"Y-m-d H:i" }}
+                        </div>
+                        <div class="pull-right">
+                            <a href="#comment_con" class="reply_comment_btn" comment_id="{{ comment.nid }}"
+                               conmment_username="{{ comment.user.username }}">回复</a>&nbsp;&nbsp;
+                            <a href="">引用</a>
+                        </div>
+                    </div>
+                    <div style="background-color: grey">
+                        {% if comment.parent_comment_id %}
+                            @<a href="">{{ comment.parent_comment.user.username }}</a> :&nbsp;&nbsp;&nbsp;
+                            {{ comment.parent_comment.content }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        {{ comment.content }}
+                    </div>
+                </div>
+
+            {% endfor %}
+        </div>
+    </div>
+
+
+    <div class="subComment_region">
+        <h5>发表评论：</h5>
+        <p><input type="text" id="tbCommentAuthor" class="author" disabled="disabled" size="50"
+                  value="{{ request.user.username }}"></p>
+        <p>评论内容：</p>
+
+        <form action="">
+            {% csrf_token %}
+            <p><textarea name="" id="comment_con" cols="60" rows="10"></textarea></p>
+            <input type="button" value="提交评论" class="btn btn-default commentBtn">
+        </form>
+    </div>
+    <div class="info user_username">{{ request.user.username }}</div>
+
+
+
+    <script>
+        // 实现ajax点赞(在登录情况下进行点赞，反之返回登录页面)
+
+        $(".diggit").click(function () {
+            if ($(".info").attr("user_username")) {
+                $.ajax({
+                    url: "/blog/poll/",
+                    type: "post",
+                    data: {
+                        csrfmiddlewaretoken: $("[name='csrfmiddlewaretoken']").val(),
+                        article_id: "{{ article_obj.nid }}"
+                    },
+                    success: function (data) {
+                        var data = JSON.parse(data);   // pollResponse
+                        if (data.state) {
+                            var val = parseInt($("#digg_count").html()) + 1;
+                            $("#digg_count").html(val)
+                        }
+                        else if (data.is_repeat) {
+                            $(".diggnum_error").html("重复提交").css("color", "red")
+                        }
+                    }
+                })
+            }
+            //在这里我们要知道两个js中location属性用法：
+            //pathname:设置或返回当前url的路径部分
+            //search:设置或返回从问好开始的url部分（参数部分）
+            else {
+                location.href = "/login/?next=" + location.pathname
+            }
+
+
+        });
+        $(".commentBtn").click(function () {
+            if ($(".info").attr("user_username")) {
+                var content;
+                if (parent_comment_id) {
+                    var index = $("#comment_con").val().indexOf("\n");     // 子评论
+                    content = $("#comment_con").val().slice(index + 1)
+                } else {
+                    content = $("#comment_con").val()
+                }
+
+                $.ajax({
+                    url: "/blog/comment/",
+                    type: "POST",
+                    data: {
+                        csrfmiddlewaretoken: $("[name='csrfmiddlewaretoken']").val(),
+                        article_id: "{{ article_obj.nid }}",
+                        comment_content: content,
+                        parent_comment_id: parent_comment_id
+
+                    },
+                    success: function (data) {
+
+                        console.log(data.create_time.slice(0, 19));
+
+                        s = '<div class="comment_item" style="border-bottom: 1px solid grey"><div class="row"> <div class="col-md-6"> <img src="{{ request.user.avatar.url}}" alt="" width="30" height="30"> <a href="/blog/{{ request.user.username }}">{{ request.user.username }}</a> 发表于 ' + data.create_time.slice(0, 19) + ' </div> <div class="pull-right"> <a href="#comment_con" class="reply_comment_btn">回复</a> <a href="">支持</a> </div> </div> <div>' + content + ' </div> </div>'
+
+                        $(".comment_list").append(s);
+
+                        $("#comment_con").val("")
+                    }
+                })
+            }
+            else {
+                location.href = "/login/?next=" + location.pathname
+            }
+
+
+        });
+
+
+        var parent_comment_id = null;
+        $(".comment_list").on("click", ".reply_comment_btn", function () {
+            if ($(".info").attr("user_username")) {
+                // 文本框中显示父评论的名字
+                var parent_comment_username = $(this).attr("conmment_username");
+                $("#comment_con").focus();
+                $("#comment_con").val("@" + parent_comment_username + "\n");
+
+                //  获取父评论的comment_id
+                parent_comment_id = $(this).attr("comment_id")
+                $.ajax({
+                    url: "/blog/commentTree/{{ article_obj.nid }}",
+                    success: function (data) {
+                        console.log(JSON.parse(data));
+                        var data = JSON.parse(data);
+                        var s = showCommentTree(data);
+                        $(".comment_tree_list").append(s);
+                    }
+                });
+
+                // 展开评论树
+
+
+                function showCommentTree(comment_list) {    //  comment_list: [{"content":"1","children_list":[{}]},{"content":"2"},{"content":"3"},]
+                    var html = "";
+
+                    $.each(comment_list, function (i, comment_dict) {
+                        var val = comment_dict["content"];
+                        var commnent_str = '<div class="comment"><div class="content"><span>' + val + '</span></div>';
+
+                        if (comment_dict["chidren_commentList"]) {
+                            var s = showCommentTree(comment_dict["chidren_commentList"]);    // [{},{}]
+                            commnent_str += s
+                        }
+
+                        commnent_str += "</div>";
+                        html += commnent_str
+                    });
+
+                    return html
+                }
+            }
+            else{
+                location.href="/login/?next="+location.pathname
+            }
+
+
+        })
+        // 获取评论树
+
+
+    </script>
+{% endblock %}

@@ -1,0 +1,59 @@
+
+.article_region .article_con{
+    margin-left: 20px;
+}
+
+
+.updown .diggit{
+    width: 46px;
+    height: 52px;
+    background: url("/static/img/upup.gif") no-repeat;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 2px;
+    padding-top: 5px;
+}
+
+.updown .buryit{
+    margin-left: 20px;
+    width: 46px;
+    height: 52px;
+    background: url("/static/img/downdown.gif") no-repeat;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 2px;
+    padding-top: 5px;
+}
+
+.subComment_region #tbCommentAuthor{
+        background-position: 3px -3px;
+        background-image: url("/static/img/icon_form.gif");
+        background-repeat: no-repeat;
+        border: 1px solid #ccc;
+        padding: 4px 4px 4px 30px;
+        width: 300px;
+        font-size: 13px;
+}
+.feedbackItem {
+    padding-top: 8px;
+    padding-right: 8px;
+    padding-bottom: 8px;
+    padding-left: 8px;
+    border-bottom-width: 1px;
+    border-bottom-style: dotted;
+    border-bottom-color: rgb(204, 204, 204);
+}
+.feedbackManage{
+    float: right;
+}
+* {
+    margin: 0;
+    padding: 0;
+}
+div {
+    display: block;
+}
+.comment{
+    margin-left: 20px;
+}
+
